@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QUANTIX AI LAB - Multi-Broker Portfolio & Performance Command Center</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#070A0F',
+              card: '#0D121D',
+              border: '#1E293B',
+              borderGlow: '#00A3FF33',
+              blue: '#00A3FF',
+              cyan: '#06B6D4',
+              emerald: '#10B981',
+              ruby: '#EF4444',
+              amber: '#F59E0B',
+              purple: '#8B5CF6'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom CSS Styling & Glassmorphism Effects */
+    body {
+      background-color: #070A0F;
+      color: #94A3B8;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .glass-card {
+      background: rgba(13, 18, 29, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(30, 41, 59, 0.8);
+      border-radius: 0.75rem;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(0, 163, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 163, 255, 0.08);
+      transition: all 0.3s ease;
+    }
+
+    .neon-text-blue {
+      text-shadow: 0 0 10px rgba(0, 163, 255, 0.5);
+    }
+
+    .neon-text-emerald {
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070A0F;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00A3FF;
+    }
+
+    /* Radial AI Gauge Gradient */
+    .gauge-circle {
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    /* Ticker Continuous Scroll Effect */
+    .ticker-animation {
+      display: flex;
+      width: max-content;
+      animation: ticker 35s linear infinite;
+    }
+    .ticker-animation:hover {
+      animation-play-state: paused;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#070A0F] text-slate-300 font-sans antialiased selection:bg-cyan-500 selection:text-white">
+
+  <div class="flex h-screen overflow-hidden">
+
+    <!-- LEFT SIDEBAR -->
+    <aside id="sidebar" class="w-64 bg-[#0A0E17] border-r border-slate-800 flex flex-col justify-between shrink-0 transition-all duration-300 z-30">
+      <div>
+        <!-- Brand Header -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-0.5 shadow-lg shadow-cyan-500/20">
+              <div class="w-full h-full bg-[#070A0F] rounded-[10px] flex items-center justify-center">
+                <span class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 text-xl font-mono">Q</span>
+              </div>
+            </div>
+            <div>
+              <h1 class="font-bold text-white text-base tracking-wider font-mono">QUANTIX</h1>
+              <p class="text-[10px] text-cyan-400 font-semibold tracking-widest uppercase">AI LAB SYSTEM</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="p-3 space-y-1 text-sm font-medium">
+          <a href="#" onclick="switchTab('overview')" class="nav-btn active flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-600/10 text-cyan-400 border border-cyan-500/30 transition-all">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>DASHBOARD</span>
+          </a>
+          <a href="#" onclick="switchTab('ea-monitor')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="cpu" class="w-4 h-4"></i>
+            <span>EA MONITOR</span>
+          </a>
+          <a href="#" onclick="switchTab('prop-firm')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+            <span>PROP FIRM RULES</span>
+          </a>
+          <a href="#" onclick="switchTab('copytrade')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>COPYTRADE HUB</span>
+          </a>
+          <a href="#" onclick="switchTab('positions')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="list-ordered" class="w-4 h-4"></i>
+            <span>POSITIONS</span>
+          </a>
+          <a href="#" onclick="switchTab('calendar')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>ECONOMIC CALENDAR</span>
+          </a>
+          <a href="#" onclick="switchTab('accounts')" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+            <i data-lucide="link-2" class="w-4 h-4"></i>
+            <span>MT5 CONNECTOR</span>
+          </a>
+        </nav>
+
+        <div class="px-3 py-2">
+          <div class="glass-card p-3 border-cyan-900/40 relative overflow-hidden group">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition-all"></div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono font-bold text-slate-300">QUANTIX AI ENGINE</span>
+              <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            </div>
+            <div class="space-y-1 font-mono text-[10px]">
+              <div class="flex justify-between text-slate-400">
+                <span>Model:</span>
+                <span class="text-cyan-400 font-semibold">QX-AI v2.1</span>
+              </div>
+              <div class="flex justify-between text-slate-400">
+                <span>Data Feed:</span>
+                <span class="text-emerald-400 font-semibold">REALTIME</span>
+              </div>
+              <div class="flex justify-between text-slate-400">
+                <span>Latency:</span>
+                <span class="text-slate-200">23 ms</span>
+              </div>
+              <div class="flex justify-between text-slate-400">
+                <span>Signals Scanned:</span>
+                <span class="text-slate-200">1,842 / min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Profile Box -->
+      <div class="p-3 border-t border-slate-800 bg-[#070A0F]/50">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-blue-400 font-bold text-xs">
+              QA
+            </div>
+            <div class="overflow-hidden">
+              <p class="text-xs font-semibold text-white truncate">Quantix AI LAB</p>
+              <p class="text-[10px] text-slate-400 truncate">Administrator</p>
+            </div>
+          </div>
+          <button title="Logout" class="text-slate-500 hover:text-slate-300 transition-colors">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT CONTAINER -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#070A0F]">
+
+      <header class="h-14 bg-[#0A0E17]/90 border-b border-slate-800 px-4 flex items-center justify-between shrink-0 z-20 backdrop-blur-md">
+        <!-- Left: Current System DateTime & Status -->
+        <div class="flex items-center gap-4 text-xs">
+          <div class="hidden sm:flex items-center gap-2 text-slate-400 font-mono">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span id="current-date">21 MAY 2025</span>
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-cyan-400 ml-2"></i>
+            <span id="current-time">13:45:32 (UTC+7)</span>
+          </div>
+          <div class="h-4 w-px bg-slate-800 hidden sm:block"></div>
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[11px] font-mono text-emerald-400 font-medium tracking-wide">ALL SYSTEMS OPERATIONAL</span>
+          </div>
+        </div>
+
+        <!-- Right: Multi-Broker Dropdown & Connect Modal Trigger -->
+        <div class="flex items-center gap-3">
+          <!-- Multi-Account Dropdown Filter -->
+          <div class="relative">
+            <select id="accountSelector" onchange="filterAccountData(this.value)" class="bg-[#0F172A] border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer">
+              <option value="all">ALL ACCOUNTS (CONSOLIDATED)</option>
+              <option value="exness">Exness Pro (Manual - #8841293)</option>
+              <option value="prop">FTMO 100K (Prop Firm - #559102)</option>
+              <option value="ea">Grid Master EA (Auto - #110294)</option>
+              <option value="copy">Alpha Master (CopyTrade - #992810)</option>
+            </select>
+          </div>
+
+          <!-- Add Account / Connect MT5 Button -->
+          <button onclick="openConnectModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-cyan-500/20 transition-all">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline">+ Add MT5 Account</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE MAIN CONTENT AREA -->
+      <main class="flex-1 overflow-y-auto p-4 space-y-4">
+
+        <!-- TAB 1: OVERVIEW TAB -->
+        <div id="tab-overview" class="tab-content space-y-4">
+
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            
+            <!-- 1. Balance Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">ACCOUNT BALANCE</span>
+                <i data-lucide="wallet" class="w-3.5 h-3.5 text-cyan-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-balance" class="text-lg font-bold text-white font-mono">$103,542.68</div>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-0.5">
+                  <i data-lucide="trending-up" class="w-3 h-3"></i>
+                  <span>Daily P/L: +$1,842.56 (1.81%)</span>
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-balance"></canvas>
+              </div>
+            </div>
+
+            <!-- 2. Equity Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">EQUITY</span>
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-blue-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-equity" class="text-lg font-bold text-white font-mono">$104,812.37</div>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-0.5">
+                  <i data-lucide="trending-up" class="w-3 h-3"></i>
+                  <span>Floating P/L: +$1,269.69 (1.22%)</span>
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-equity"></canvas>
+              </div>
+            </div>
+
+            <!-- 3. Total Profit Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">TOTAL PROFIT</span>
+                <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-emerald-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-profit" class="text-lg font-bold text-emerald-400 font-mono">$18,924.32</div>
+                <div class="flex items-center gap-1 text-[10px] text-emerald-400 font-mono mt-0.5">
+                  <span>This Month: +$4,218.73 (28.64%)</span>
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-profit"></canvas>
+              </div>
+            </div>
+
+            <!-- 4. Max Drawdown Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">MAX DRAWDOWN</span>
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-ruby-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-dd" class="text-lg font-bold text-ruby-400 font-mono">8.27%</div>
+                <div class="flex items-center gap-1 text-[10px] text-slate-400 font-mono mt-0.5">
+                  <span>Today DD: 2.15%</span>
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-dd"></canvas>
+              </div>
+            </div>
+
+            <!-- 5. Win Rate Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">WIN RATE</span>
+                <i data-lucide="target" class="w-3.5 h-3.5 text-cyan-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-winrate" class="text-lg font-bold text-white font-mono">72.34%</div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-0.5">
+                  <span>Total Trades: 1,254</span>
+                  <span>Expectancy: $18.73</span>
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-winrate"></canvas>
+              </div>
+            </div>
+
+            <!-- 6. Profit Factor Card -->
+            <div class="glass-card p-3 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span class="text-[11px]">PROFIT FACTOR</span>
+                <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-purple-400"></i>
+              </div>
+              <div class="mt-2">
+                <div id="kpi-pf" class="text-lg font-bold text-purple-400 font-mono">2.31</div>
+                <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                  Optimal (> 1.8)
+                </div>
+              </div>
+              <div class="h-6 mt-2">
+                <canvas id="spark-pf"></canvas>
+              </div>
+            </div>
+
+            <!-- 7. AI Signal Score Circular Radial Gauge Card -->
+            <div class="glass-card p-3 flex flex-col items-center justify-center relative overflow-hidden border-cyan-500/30 col-span-2 md:col-span-1">
+              <div class="text-[11px] font-mono text-slate-400 font-semibold mb-1">AI SIGNAL SCORE</div>
+              <div class="relative w-20 h-20 flex items-center justify-center">
+                <svg class="w-full h-full" viewBox="0 0 36 36">
+                  <path class="text-slate-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  <path class="text-cyan-400 gauge-circle" stroke-dasharray="87, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="absolute flex flex-col items-center justify-center text-center">
+                  <span id="ai-score" class="text-xl font-black text-white font-mono leading-none">87</span>
+                  <span class="text-[9px] text-slate-400 font-mono">/100</span>
+                </div>
+              </div>
+              <div class="text-[10px] font-mono font-bold text-emerald-400 mt-1 uppercase tracking-wider">STRONG EDGE</div>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+            <!-- Equity Curve Main Chart (8 cols) -->
+            <div class="glass-card p-4 lg:col-span-7 flex flex-col justify-between">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-white font-mono">EQUITY CURVE</h3>
+                  <i data-lucide="info" class="w-3.5 h-3.5 text-slate-500 cursor-pointer" title="Equity vs Balance Performance over time"></i>
+                </div>
+                <!-- Timeframe Selectors -->
+                <div class="flex items-center gap-1 bg-[#0A0E17] p-1 rounded-lg border border-slate-800 text-[11px] font-mono">
+                  <button onclick="updateChartTimeframe('1D')" class="tf-btn px-2 py-0.5 rounded text-slate-400 hover:text-white">1D</button>
+                  <button onclick="updateChartTimeframe('7D')" class="tf-btn px-2 py-0.5 rounded text-slate-400 hover:text-white">7D</button>
+                  <button onclick="updateChartTimeframe('30D')" class="tf-btn active px-2 py-0.5 rounded bg-blue-600 text-white font-semibold">30D</button>
+                  <button onclick="updateChartTimeframe('90D')" class="tf-btn px-2 py-0.5 rounded text-slate-400 hover:text-white">90D</button>
+                  <button onclick="updateChartTimeframe('1Y')" class="tf-btn px-2 py-0.5 rounded text-slate-400 hover:text-white">1Y</button>
+                  <button onclick="updateChartTimeframe('ALL')" class="tf-btn px-2 py-0.5 rounded text-slate-400 hover:text-white">ALL</button>
+                </div>
+              </div>
+              <!-- Canvas Chart -->
+              <div class="h-64 w-full">
+                <canvas id="equityChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Market Regime AI (2.5 cols) -->
+            <div class="glass-card p-4 lg:col-span-2.5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                    <i data-lucide="radar" class="w-4 h-4 text-cyan-400"></i>
+                    MARKET REGIME (AI)
+                  </h3>
+                </div>
+                <!-- Radar Visual / Status -->
+                <div class="text-center my-3">
+                  <span class="text-[10px] text-slate-400 uppercase font-mono">CURRENT TREND</span>
+                  <div class="text-lg font-black text-cyan-400 font-mono tracking-wider flex items-center justify-center gap-1">
+                    TRENDING <i data-lucide="trending-up" class="w-5 h-5"></i>
+                  </div>
+                </div>
+                <div class="space-y-3 font-mono text-xs">
+                  <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                      <span>Confidence</span>
+                      <span class="text-cyan-400 font-bold">78%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div class="bg-cyan-400 h-1.5 rounded-full" style="width: 78%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                      <span>Volatility</span>
+                      <span class="text-amber-400 font-bold">MEDIUM</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div class="bg-amber-400 h-1.5 rounded-full" style="width: 55%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                      <span>Regime Strength</span>
+                    </div>
+                    <div class="flex gap-1">
+                      <div class="h-2 flex-1 bg-cyan-500 rounded-sm"></div>
+                      <div class="h-2 flex-1 bg-cyan-500 rounded-sm"></div>
+                      <div class="h-2 flex-1 bg-cyan-500 rounded-sm"></div>
+                      <div class="h-2 flex-1 bg-cyan-500/30 rounded-sm"></div>
+                      <div class="h-2 flex-1 bg-cyan-500/30 rounded-sm"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Market Exposure Donut (2.5 cols) -->
+            <div class="glass-card p-4 lg:col-span-2.5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-400"></i>
+                    EXPOSURE
+                  </h3>
+                </div>
+                <!-- Donut Chart -->
+                <div class="h-36 w-full relative flex items-center justify-center">
+                  <canvas id="exposureChart"></canvas>
+                  <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span class="text-lg font-bold text-white font-mono">0.42</span>
+                    <span class="text-[9px] text-slate-400 font-mono">Net Exposure</span>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-1 font-mono text-[11px] pt-2 border-t border-slate-800">
+                <div class="flex justify-between text-slate-400">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Long</span>
+                  <span class="text-emerald-400 font-bold">0.68</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-ruby-500"></span>Short</span>
+                  <span class="text-ruby-400 font-bold">-0.26</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-500"></span>Neutral</span>
+                  <span class="text-slate-300 font-bold">0.58</span>
+                </div>
+                <div class="flex justify-between pt-1 text-[10px] text-slate-400 border-t border-slate-800/60">
+                  <span>Leverage Used: <strong class="text-white">21.3%</strong></span>
+                  <span>Margin Level: <strong class="text-emerald-400">1,284%</strong></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+
+            <!-- Performance Summary (3 cols) -->
+            <div class="glass-card p-4 lg:col-span-3">
+              <h3 class="text-xs font-bold text-white font-mono mb-3 flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+                PERFORMANCE SUMMARY
+              </h3>
+              <div class="space-y-2 font-mono text-xs">
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Total Net Profit</span>
+                  <span class="text-emerald-400 font-bold">$12,542.68</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Gross Profit</span>
+                  <span class="text-emerald-400">$18,924.32</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Gross Loss</span>
+                  <span class="text-ruby-400">-$6,381.64</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Average Win</span>
+                  <span class="text-emerald-400">$48.32</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Average Loss</span>
+                  <span class="text-ruby-400">-$23.87</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Largest Win</span>
+                  <span class="text-emerald-400">$236.54</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Largest Loss</span>
+                  <span class="text-ruby-400">-$112.75</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Sharpe Ratio</span>
+                  <span class="text-cyan-400 font-bold">1.87</span>
+                </div>
+                <div class="flex justify-between pb-1 border-b border-slate-800/80">
+                  <span class="text-slate-400">Sortino Ratio</span>
+                  <span class="text-cyan-400 font-bold">2.64</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Calmar Ratio</span>
+                  <span class="text-cyan-400 font-bold">2.18</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monthly P/L Bar Chart (3 cols) -->
+            <div class="glass-card p-4 lg:col-span-3 flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                  <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-400"></i>
+                  MONTHLY P/L (USD)
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400">2025</span>
+              </div>
+              <div class="h-48 w-full">
+                <canvas id="monthlyChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Trade Distribution Donut Chart (3 cols) -->
+            <div class="glass-card p-4 lg:col-span-3 flex flex-col justify-between">
+              <h3 class="text-xs font-bold text-white font-mono mb-2 flex items-center gap-1.5">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i>
+                TRADE DISTRIBUTION
+              </h3>
+              <div class="h-40 w-full relative flex items-center justify-center">
+                <canvas id="tradeDistChart"></canvas>
+                <div class="absolute flex flex-col items-center justify-center text-center">
+                  <span class="text-base font-bold text-white font-mono">1,254</span>
+                  <span class="text-[9px] text-slate-400 font-mono">Trades</span>
+                </div>
+              </div>
+              <div class="space-y-1 font-mono text-[11px] pt-2 border-t border-slate-800">
+                <div class="flex justify-between text-slate-400">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Winning Trades</span>
+                  <span class="text-emerald-400 font-bold">907 (72.34%)</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-ruby-500"></span>Losing Trades</span>
+                  <span class="text-ruby-400 font-bold">347 (27.66%)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Signals Table (3 cols) -->
+            <div class="glass-card p-4 lg:col-span-3 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                    <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+                    LIVE SIGNALS
+                  </h3>
+                  <a href="#" class="text-[10px] text-cyan-400 hover:underline font-mono">View All &gt;</a>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left font-mono text-[11px]">
+                    <thead>
+                      <tr class="text-slate-500 border-b border-slate-800 text-[10px]">
+                        <th class="pb-1.5">SYMBOL</th>
+                        <th class="pb-1.5">TF</th>
+                        <th class="pb-1.5">SIGNAL</th>
+                        <th class="pb-1.5">STRENGTH</th>
+                        <th class="pb-1.5">AI SCORE</th>
+                        <th class="pb-1.5">TIME</th>
+                      </tr>
+                    </thead>
+                    <tbody id="signals-tbody" class="divide-y divide-slate-800/60 text-slate-300">
+                      <tr>
+                        <td class="py-1.5 font-bold text-white">XAUUSD</td>
+                        <td class="py-1.5 text-slate-400">M1</td>
+                        <td class="py-1.5 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-1.5 text-slate-300">99%</td>
+                        <td class="py-1.5 text-cyan-400 font-bold">91</td>
+                        <td class="py-1.5 text-slate-400">13:45:21</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 font-bold text-white">EURUSD</td>
+                        <td class="py-1.5 text-slate-400">M5</td>
+                        <td class="py-1.5 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-1.5 text-slate-300">89%</td>
+                        <td class="py-1.5 text-cyan-400 font-bold">81</td>
+                        <td class="py-1.5 text-slate-400">13:44:58</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 font-bold text-white">GBPUSD</td>
+                        <td class="py-1.5 text-slate-400">M5</td>
+                        <td class="py-1.5 text-ruby-400 font-bold">SELL</td>
+                        <td class="py-1.5 text-slate-300">68%</td>
+                        <td class="py-1.5 text-amber-400 font-bold">72</td>
+                        <td class="py-1.5 text-slate-400">13:44:41</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 font-bold text-white">USDJPY</td>
+                        <td class="py-1.5 text-slate-400">M15</td>
+                        <td class="py-1.5 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-1.5 text-slate-300">71%</td>
+                        <td class="py-1.5 text-amber-400 font-bold">74</td>
+                        <td class="py-1.5 text-slate-400">13:44:30</td>
+                      </tr>
+                      <tr>
+                        <td class="py-1.5 font-bold text-white">BTCUSD</td>
+                        <td class="py-1.5 text-slate-400">M15</td>
+                        <td class="py-1.5 text-ruby-400 font-bold">SELL</td>
+                        <td class="py-1.5 text-slate-300">62%</td>
+                        <td class="py-1.5 text-slate-400 font-bold">68</td>
+                        <td class="py-1.5 text-slate-400">13:44:12</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+            <!-- Open Positions Table (8 cols) -->
+            <div class="glass-card p-4 lg:col-span-8 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                    <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
+                    OPEN POSITIONS
+                  </h3>
+                  <span class="text-[10px] font-mono text-slate-400">Active Positions Across Brokers</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left font-mono text-xs">
+                    <thead>
+                      <tr class="text-slate-500 border-b border-slate-800 text-[10px]">
+                        <th class="pb-2">SYMBOL</th>
+                        <th class="pb-2">TYPE</th>
+                        <th class="pb-2">VOLUME</th>
+                        <th class="pb-2">OPEN PRICE</th>
+                        <th class="pb-2">CURRENT PRICE</th>
+                        <th class="pb-2">P/L (USD)</th>
+                        <th class="pb-2">P/L (%)</th>
+                        <th class="pb-2">OPEN TIME</th>
+                        <th class="pb-2">STRATEGY</th>
+                        <th class="pb-2">AI SCORE</th>
+                        <th class="pb-2 text-right">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody id="positions-tbody" class="divide-y divide-slate-800/60 text-slate-300 text-[11px]">
+                      <tr>
+                        <td class="py-2 font-bold text-white">XAUUSD</td>
+                        <td class="py-2 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-2">0.50</td>
+                        <td class="py-2 text-slate-400">2,398.45</td>
+                        <td class="py-2 text-white">2,421.87</td>
+                        <td class="py-2 text-emerald-400 font-bold">+$1,170.00</td>
+                        <td class="py-2 text-emerald-400">+0.98%</td>
+                        <td class="py-2 text-slate-400">21/05 13:32:11</td>
+                        <td class="py-2 text-cyan-400">Alpha Trend</td>
+                        <td class="py-2 font-bold text-cyan-400">91</td>
+                        <td class="py-2 text-right">
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Modify"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-ruby-500/20 rounded text-slate-400 hover:text-ruby-400" title="Close Position"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="py-2 font-bold text-white">EURUSD</td>
+                        <td class="py-2 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-2">0.30</td>
+                        <td class="py-2 text-slate-400">1.08642</td>
+                        <td class="py-2 text-white">1.08913</td>
+                        <td class="py-2 text-emerald-400 font-bold">+$81.30</td>
+                        <td class="py-2 text-emerald-400">+0.25%</td>
+                        <td class="py-2 text-slate-400">21/05 13:28:45</td>
+                        <td class="py-2 text-cyan-400">Alpha Trend</td>
+                        <td class="py-2 font-bold text-cyan-400">81</td>
+                        <td class="py-2 text-right">
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Modify"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-ruby-500/20 rounded text-slate-400 hover:text-ruby-400" title="Close Position"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="py-2 font-bold text-white">GBPUSD</td>
+                        <td class="py-2 text-ruby-400 font-bold">SELL</td>
+                        <td class="py-2">0.30</td>
+                        <td class="py-2 text-slate-400">1.26789</td>
+                        <td class="py-2 text-white">1.26521</td>
+                        <td class="py-2 text-ruby-400 font-bold">-$80.40</td>
+                        <td class="py-2 text-ruby-400">+0.21%</td>
+                        <td class="py-2 text-slate-400">21/05 13:25:32</td>
+                        <td class="py-2 text-purple-400">Sigma Range</td>
+                        <td class="py-2 font-bold text-amber-400">72</td>
+                        <td class="py-2 text-right">
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Modify"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-ruby-500/20 rounded text-slate-400 hover:text-ruby-400" title="Close Position"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="py-2 font-bold text-white">USDJPY</td>
+                        <td class="py-2 text-emerald-400 font-bold">BUY</td>
+                        <td class="py-2">0.40</td>
+                        <td class="py-2 text-slate-400">155.842</td>
+                        <td class="py-2 text-white">156.213</td>
+                        <td class="py-2 text-emerald-400 font-bold">+$94.87</td>
+                        <td class="py-2 text-emerald-400">+0.24%</td>
+                        <td class="py-2 text-slate-400">21/05 13:20:18</td>
+                        <td class="py-2 text-amber-400">Gamma Breakout</td>
+                        <td class="py-2 font-bold text-amber-400">74</td>
+                        <td class="py-2 text-right">
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Modify"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-ruby-500/20 rounded text-slate-400 hover:text-ruby-400" title="Close Position"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="py-2 font-bold text-white">BTCUSD</td>
+                        <td class="py-2 text-ruby-400 font-bold">SELL</td>
+                        <td class="py-2">0.10</td>
+                        <td class="py-2 text-slate-400">68,521.30</td>
+                        <td class="py-2 text-white">67,892.10</td>
+                        <td class="py-2 text-emerald-400 font-bold">+$62.92</td>
+                        <td class="py-2 text-emerald-400">+0.92%</td>
+                        <td class="py-2 text-slate-400">21/05 13:18:07</td>
+                        <td class="py-2 text-cyan-400">Alpha Trend</td>
+                        <td class="py-2 font-bold text-slate-400">68</td>
+                        <td class="py-2 text-right">
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white" title="Modify"><i data-lucide="edit" class="w-3.5 h-3.5"></i></button>
+                          <button onclick="closePosition(this)" class="p-1 hover:bg-ruby-500/20 rounded text-slate-400 hover:text-ruby-400" title="Close Position"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Total Floating Summary Footer -->
+              <div class="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center font-mono">
+                <span class="text-xs text-slate-400 font-semibold">Total Floating P/L</span>
+                <span class="text-base font-bold text-emerald-400">+$1,269.69 <span class="text-xs text-emerald-500 font-normal">(1.22%)</span></span>
+              </div>
+            </div>
+
+            <!-- EA Systems Status Cards (4 cols) -->
+            <div class="glass-card p-4 lg:col-span-4 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                    <i data-lucide="bot" class="w-4 h-4 text-emerald-400"></i>
+                    EA SYSTEMS
+                  </h3>
+                  <a href="#" class="text-[10px] text-cyan-400 hover:underline font-mono">View All &gt;</a>
+                </div>
+                <div class="space-y-2.5 font-mono text-xs">
+                  
+                  <!-- EA Item 1 -->
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#0A0E17] border border-slate-800">
+                    <div>
+                      <div class="font-bold text-white">Turbo GT M5</div>
+                      <div class="text-[10px] text-slate-400">Strategy: Alpha Trend</div>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+                      </span>
+                      <div class="text-emerald-400 font-bold text-xs">+$842.36</div>
+                    </div>
+                  </div>
+
+                  <!-- EA Item 2 -->
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#0A0E17] border border-slate-800">
+                    <div>
+                      <div class="font-bold text-white">Mean Reversal M1</div>
+                      <div class="text-[10px] text-slate-400">Strategy: Sigma Range</div>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+                      </span>
+                      <div class="text-emerald-400 font-bold text-xs">+$318.71</div>
+                    </div>
+                  </div>
+
+                  <!-- EA Item 3 -->
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#0A0E17] border border-slate-800">
+                    <div>
+                      <div class="font-bold text-white">Grid Master XAU</div>
+                      <div class="text-[10px] text-slate-400">Strategy: Delta Recovery</div>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+                      </span>
+                      <div class="text-emerald-400 font-bold text-xs">+$276.42</div>
+                    </div>
+                  </div>
+
+                  <!-- EA Item 4 -->
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#0A0E17] border border-slate-800">
+                    <div>
+                      <div class="font-bold text-white">Scalper Pro M1</div>
+                      <div class="text-[10px] text-slate-400">Strategy: Gamma Breakout</div>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+                      </span>
+                      <div class="text-emerald-400 font-bold text-xs">+$154.22</div>
+                    </div>
+                  </div>
+
+                  <!-- EA Item 5 -->
+                  <div class="flex items-center justify-between p-2 rounded-lg bg-[#0A0E17] border border-slate-800 opacity-60">
+                    <div>
+                      <div class="font-bold text-white">News Filter AI</div>
+                      <div class="text-[10px] text-slate-400">Strategy: Omega Protect</div>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center gap-1 text-[10px] text-amber-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Standby
+                      </span>
+                      <div class="text-slate-400 font-bold text-xs">$0.00</div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TAB 2: EA MONITOR TAB -->
+        <div id="tab-ea-monitor" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6 text-center">
+            <i data-lucide="cpu" class="w-12 h-12 text-cyan-400 mx-auto mb-3"></i>
+            <h2 class="text-xl font-bold text-white font-mono mb-2">EA AUTOMATION MONITORING CENTER</h2>
+            <p class="text-sm text-slate-400 max-w-xl mx-auto mb-4">Detailed real-time execution logs, latency stats, magic number tracking, and automated stop-loss guardrails for all connected Expert Advisors.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left font-mono text-xs">
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <span class="text-slate-400">Active EA Instances</span>
+                <div class="text-2xl font-bold text-white mt-1">4 Active / 1 Standby</div>
+              </div>
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <span class="text-slate-400">Avg Execution Time</span>
+                <div class="text-2xl font-bold text-emerald-400 mt-1">18 ms</div>
+              </div>
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <span class="text-slate-400">API Gateway Status</span>
+                <div class="text-2xl font-bold text-cyan-400 mt-1">OPTIMAL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: PROP FIRM TAB -->
+        <div id="tab-prop-firm" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-lg font-bold text-white font-mono flex items-center gap-2">
+                  <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
+                  PROP FIRM CHALLENGE SAFETY GUARD
+                </h2>
+                <p class="text-xs text-slate-400 font-mono">FTMO 100K Account #559102 Real-time Target & Drawdown Limits</p>
+              </div>
+              <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full font-mono text-xs font-bold">STATUS: PASSED PHASE 1</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs mb-4">
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <div class="flex justify-between text-slate-400 mb-2">
+                  <span>Daily Loss Limit (Max 5%)</span>
+                  <span class="text-emerald-400 font-bold">1.2% Used</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div class="bg-emerald-400 h-2 rounded-full" style="width: 24%"></div>
+                </div>
+              </div>
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <div class="flex justify-between text-slate-400 mb-2">
+                  <span>Max Overall Drawdown (Max 10%)</span>
+                  <span class="text-emerald-400 font-bold">3.4% Used</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div class="bg-emerald-400 h-2 rounded-full" style="width: 34%"></div>
+                </div>
+              </div>
+              <div class="bg-[#0A0E17] p-4 rounded-lg border border-slate-800">
+                <div class="flex justify-between text-slate-400 mb-2">
+                  <span>Profit Target ($10,000 / 10%)</span>
+                  <span class="text-cyan-400 font-bold">84% Reached</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div class="bg-cyan-400 h-2 rounded-full" style="width: 84%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: COPYTRADE HUB -->
+        <div id="tab-copytrade" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6 text-center">
+            <i data-lucide="copy" class="w-12 h-12 text-blue-400 mx-auto mb-3"></i>
+            <h2 class="text-xl font-bold text-white font-mono mb-2">COPYTRADE MULTI-BROKER HUB</h2>
+            <p class="text-sm text-slate-400 max-w-xl mx-auto mb-4">Master-Slave Signal Copier with sub-millisecond execution, multiplier lot scaling, and auto risk-hedging.</p>
+          </div>
+        </div>
+
+        <!-- TAB 5: POSITIONS TAB -->
+        <div id="tab-positions" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6">
+            <h2 class="text-lg font-bold text-white font-mono mb-4">DETAILED OPEN POSITIONS MANAGEMENT</h2>
+            <p class="text-xs text-slate-400 font-mono mb-4">Complete overview of all positions with real-time modification and instant bulk close tools.</p>
+          </div>
+        </div>
+
+        <!-- TAB 6: CALENDAR -->
+        <div id="tab-calendar" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6">
+            <h2 class="text-lg font-bold text-white font-mono mb-4">HIGH IMPACT ECONOMIC CALENDAR</h2>
+            <p class="text-xs text-slate-400 font-mono mb-4">AI News Filter integrated calendar. Automatic EA pause triggers on USD/EUR 3-Star releases.</p>
+          </div>
+        </div>
+
+        <!-- TAB 7: ACCOUNTS & MT5 CONNECTOR -->
+        <div id="tab-accounts" class="tab-content hidden space-y-4">
+          <div class="glass-card p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-bold text-white font-mono">CONNECTED METATRADER 5 ACCOUNTS</h2>
+              <button onclick="openConnectModal()" class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold font-mono text-xs rounded-lg">+ Add New MT5</button>
+            </div>
+            <div class="space-y-3 font-mono text-xs">
+              <div class="p-3 bg-[#0A0E17] rounded-lg border border-slate-800 flex justify-between items-center">
+                <div>
+                  <span class="text-white font-bold">Exness Pro #8841293</span> (Manual)
+                  <div class="text-[10px] text-slate-400">Server: Exness-Real11 | Balance: $28,410.12</div>
+                </div>
+                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px]">Connected</span>
+              </div>
+              <div class="p-3 bg-[#0A0E17] rounded-lg border border-slate-800 flex justify-between items-center">
+                <div>
+                  <span class="text-white font-bold">FTMO 100K #559102</span> (Prop Firm)
+                  <div class="text-[10px] text-slate-400">Server: FTMO-Server2 | Balance: $108,412.37</div>
+                </div>
+                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px]">Connected</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <footer class="h-9 bg-[#0A0E17] border-t border-slate-800 px-4 flex items-center justify-between shrink-0 font-mono text-[11px] overflow-hidden">
+        
+        <!-- Scrolling Price Ticker -->
+        <div class="flex-1 overflow-hidden mr-4">
+          <div class="ticker-animation items-center gap-6 text-slate-300">
+            <span class="flex items-center gap-1.5"><strong class="text-white">XAUUSD</strong> 2,421.87 <span class="text-emerald-400 text-[10px]">+0.98%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">EURUSD</strong> 1.08913 <span class="text-emerald-400 text-[10px]">+0.25%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">GBPUSD</strong> 1.26521 <span class="text-emerald-400 text-[10px]">+0.21%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">USDJPY</strong> 156.213 <span class="text-emerald-400 text-[10px]">+0.24%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">BTCUSD</strong> 67,892.10 <span class="text-emerald-400 text-[10px]">+0.92%</span></span>
+            <!-- Duplicate for seamless scroll loop -->
+            <span class="flex items-center gap-1.5"><strong class="text-white">XAUUSD</strong> 2,421.87 <span class="text-emerald-400 text-[10px]">+0.98%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">EURUSD</strong> 1.08913 <span class="text-emerald-400 text-[10px]">+0.25%</span></span>
+            <span class="flex items-center gap-1.5"><strong class="text-white">GBPUSD</strong> 1.26521 <span class="text-emerald-400 text-[10px]">+0.21%</span></span>
+          </div>
+        </div>
+
+        <!-- Connection Badge Indicators -->
+        <div class="hidden lg:flex items-center gap-4 shrink-0 text-slate-400 text-[10px]">
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> SERVER LIVE</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> VPS CONNECTED</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> MT5 CONNECTED</span>
+          <span class="text-slate-500">QUANTIX AI LAB © 2026</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- ADD MT5 ACCOUNT MODAL -->
+  <div id="connectModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full p-6 border-cyan-500/40 relative shadow-2xl">
+      <button onclick="closeConnectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <div class="flex items-center gap-2 mb-4">
+        <i data-lucide="link" class="w-5 h-5 text-cyan-400"></i>
+        <h3 class="text-lg font-bold text-white font-mono">CONNECT METATRADER 5 ACCOUNT</h3>
+      </div>
+
+      <form onsubmit="handleAccountConnect(event)" class="space-y-4 font-mono text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">ACCOUNT TYPE / TAG</label>
+          <select id="accountTypeInput" class="w-full bg-[#0A0E17] border border-slate-700 rounded p-2 text-white focus:border-cyan-500">
+            <option value="MANUAL">Manual Trading (Exness, IC Markets)</option>
+            <option value="PROP">Prop Firm (FTMO, FundedNext)</option>
+            <option value="EA">Automated EA Bot</option>
+            <option value="COPY">CopyTrade Master/Slave</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">MT5 ACCOUNT NUMBER</label>
+            <input type="text" required placeholder="e.g. 8841920" class="w-full bg-[#0A0E17] border border-slate-700 rounded p-2 text-white focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">BROKER SERVER</label>
+            <input type="text" required placeholder="e.g. Exness-Real10" class="w-full bg-[#0A0E17] border border-slate-700 rounded p-2 text-white focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">WEBHOOK SECURITY TOKEN</label>
+          <div class="flex gap-2">
+            <input type="text" id="tokenInput" readonly value="QX-WEBHOOK-99482-SECURE-TOKEN" class="flex-1 bg-[#0A0E17] border border-slate-700 rounded p-2 text-cyan-400 font-bold">
+            <button type="button" onclick="copyToken()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded">Copy</button>
+          </div>
+        </div>
+
+        <div class="p-3 bg-blue-950/30 border border-blue-800/40 rounded text-[11px] text-slate-300">
+          <strong>Setup Instructions:</strong> Attach the Quantix MQL5 EA Webhook script to any chart on MT5 and paste the Webhook Security Token above.
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeConnectModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded">Connect Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Chart References
+    let equityChart, monthlyChart, tradeDistChart, exposureChart;
+    let sparklineCharts = [];
+
+    // Initialize Dashboard Application
+    window.onload = function() {
+      updateTime();
+      setInterval(updateTime, 1000);
+      initCharts();
+      initSparklines();
+      startPriceTickerSimulation();
+    };
+
+    // Date Time Updater
+    function updateTime() {
+      const now = new Date();
+      const optionsDate = { day: '2-digit', month: 'SHORT', year: 'NUMERIC' };
+      document.getElementById('current-date').innerText = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+      document.getElementById('current-time').innerText = now.toTimeString().split(' ')[0] + ' (UTC+7)';
+    }
+
+    // Tab Switching Functionality
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('bg-blue-600/10', 'text-cyan-400', 'border', 'border-cyan-500/30');
+        el.classList.add('text-slate-400');
+      });
+
+      const selectedTab = document.getElementById('tab-' + tabId);
+      if(selectedTab) selectedTab.classList.remove('hidden');
+
+      // Highlight Event Link
+      event.currentTarget.classList.add('bg-blue-600/10', 'text-cyan-400', 'border', 'border-cyan-500/30');
+      event.currentTarget.classList.remove('text-slate-400');
+    }
+
+    // Modal Control Functions
+    function openConnectModal() {
+      document.getElementById('connectModal').classList.remove('hidden');
+    }
+    function closeConnectModal() {
+      document.getElementById('connectModal').classList.add('hidden');
+    }
+    function copyToken() {
+      const tokenInput = document.getElementById('tokenInput');
+      tokenInput.select();
+      document.execCommand('copy');
+      alert('Webhook Token copied to clipboard!');
+    }
+    function handleAccountConnect(e) {
+      e.preventDefault();
+      alert('MT5 Account Connection Initiated successfully!');
+      closeConnectModal();
+    }
+
+    // Account Data Filter Switching
+    function filterAccountData(accountValue) {
+      // Mock dynamic updates based on selected broker
+      if (accountValue === 'prop') {
+        document.getElementById('kpi-balance').innerText = '$108,412.37';
+        document.getElementById('kpi-equity').innerText = '$109,215.10';
+        document.getElementById('kpi-profit').innerText = '$8,412.37';
+        document.getElementById('kpi-dd').innerText = '3.42%';
+        document.getElementById('kpi-winrate').innerText = '76.20%';
+      } else if (accountValue === 'ea') {
+        document.getElementById('kpi-balance').innerText = '$45,210.00';
+        document.getElementById('kpi-equity').innerText = '$45,890.20';
+        document.getElementById('kpi-profit').innerText = '$5,210.00';
+        document.getElementById('kpi-dd').innerText = '5.10%';
+        document.getElementById('kpi-winrate').innerText = '68.50%';
+      } else {
+        document.getElementById('kpi-balance').innerText = '$103,542.68';
+        document.getElementById('kpi-equity').innerText = '$104,812.37';
+        document.getElementById('kpi-profit').innerText = '$18,924.32';
+        document.getElementById('kpi-dd').innerText = '8.27%';
+        document.getElementById('kpi-winrate').innerText = '72.34%';
+      }
+      initCharts();
+    }
+
+    // Close Position Dynamic Handler
+    function closePosition(button) {
+      const row = button.closest('tr');
+      row.style.opacity = '0.3';
+      setTimeout(() => {
+        row.remove();
+      }, 300);
+    }
+
+    function initCharts() {
+      // 1. Equity Curve Chart
+      const ctxEquity = document.getElementById('equityChart').getContext('2d');
+      if (equityChart) equityChart.destroy();
+
+      const gradientEquity = ctxEquity.createLinearGradient(0, 0, 0, 300);
+      gradientEquity.addColorStop(0, 'rgba(0, 163, 255, 0.35)');
+      gradientEquity.addColorStop(1, 'rgba(0, 163, 255, 0.0)');
+
+      equityChart = new Chart(ctxEquity, {
+        type: 'line',
+        data: {
+          labels: ['21 Apr', '26 Apr', '1 May', '6 May', '11 May', '16 May', '21 May'],
+          datasets: [
+            {
+              label: 'Equity',
+              data: [95000, 98000, 97500, 102000, 99500, 103000, 104812],
+              borderColor: '#00A3FF',
+              borderWidth: 2,
+              fill: true,
+              backgroundColor: gradientEquity,
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 6
+            },
+            {
+              label: 'Balance',
+              data: [95000, 97200, 97200, 100500, 99000, 101800, 103542],
+              borderColor: '#94A3B8',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              fill: false,
+              tension: 0.3,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, labels: { color: '#94A3B8', font: { family: 'JetBrains Mono', size: 10 } } },
+            tooltip: {
+              backgroundColor: '#0A0E17',
+              borderColor: '#00A3FF',
+              borderWidth: 1,
+              titleFont: { family: 'JetBrains Mono' },
+              bodyFont: { family: 'JetBrains Mono' }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#1E293B' }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } } },
+            y: { grid: { color: '#1E293B' }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } } }
+          }
+        }
+      });
+
+      // 2. Exposure Donut Chart
+      const ctxExposure = document.getElementById('exposureChart').getContext('2d');
+      if (exposureChart) exposureChart.destroy();
+      exposureChart = new Chart(ctxExposure, {
+        type: 'doughnut',
+        data: {
+          labels: ['Long', 'Short', 'Neutral'],
+          datasets: [{
+            data: [0.68, 0.26, 0.58],
+            backgroundColor: ['#10B981', '#EF4444', '#475569'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%',
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 3. Monthly P/L Bar Chart
+      const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+      if (monthlyChart) monthlyChart.destroy();
+      monthlyChart = new Chart(ctxMonthly, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            data: [1200, 2100, 3800, 2400, 2500, 3100],
+            backgroundColor: '#00A3FF',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } } },
+            y: { grid: { color: '#1E293B' }, ticks: { color: '#64748B', font: { family: 'JetBrains Mono', size: 10 } } }
+          }
+        }
+      });
+
+      // 4. Trade Distribution Donut Chart
+      const ctxTradeDist = document.getElementById('tradeDistChart').getContext('2d');
+      if (tradeDistChart) tradeDistChart.destroy();
+      tradeDistChart = new Chart(ctxTradeDist, {
+        type: 'doughnut',
+        data: {
+          labels: ['Winning Trades', 'Losing Trades'],
+          datasets: [{
+            data: [907, 347],
+            backgroundColor: ['#10B981', '#EF4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%',
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // Mini Sparkline Renderers for KPI Cards
+    function initSparklines() {
+      const sparkConfigs = [
+        { id: 'spark-balance', color: '#00A3FF', data: [10, 12, 11, 14, 13, 16, 15] },
+        { id: 'spark-equity', color: '#10B981', data: [12, 11, 13, 15, 14, 17, 18] },
+        { id: 'spark-profit', color: '#10B981', data: [5, 8, 10, 12, 15, 17, 19] },
+        { id: 'spark-dd', color: '#EF4444', data: [2, 3, 2.5, 4, 3, 5, 8.27] },
+        { id: 'spark-winrate', color: '#00A3FF', data: [70, 71, 70.5, 72, 71.8, 72.34] },
+        { id: 'spark-pf', color: '#8B5CF6', data: [1.8, 1.9, 2.1, 2.0, 2.2, 2.31] }
+      ];
+
+      sparkConfigs.forEach(cfg => {
+        const ctx = document.getElementById(cfg.id).getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: cfg.data.map((_, i) => i),
+            datasets: [{
+              data: cfg.data,
+              borderColor: cfg.color,
+              borderWidth: 1.5,
+              fill: false,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } }
+          }
+        });
+      });
+    }
+
+    // Timeframe selector handler for Equity Curve
+    function updateChartTimeframe(tf) {
+      document.querySelectorAll('.tf-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white', 'font-semibold', 'active');
+        b.classList.add('text-slate-400');
+      });
+      event.currentTarget.classList.add('bg-blue-600', 'text-white', 'font-semibold', 'active');
+      event.currentTarget.classList.remove('text-slate-400');
+
+      // Refresh chart
+      initCharts();
+    }
+
+    // Real-Time Price Simulation
+    function startPriceTickerSimulation() {
+      setInterval(() => {
+        // Random micro fluctuations for Live Signal Scores
+        const aiScoreEl = document.getElementById('ai-score');
+        if (aiScoreEl && Math.random() > 0.7) {
+          const newScore = Math.floor(85 + Math.random() * 5);
+          aiScoreEl.innerText = newScore;
+        }
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
